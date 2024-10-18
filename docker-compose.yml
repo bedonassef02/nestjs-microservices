@@ -1,0 +1,113 @@
+version: '3.8'
+
+services:
+  workflows-service:
+    build:
+      context: .
+      dockerfile: ./Dockerfile
+      args:
+        - APP_NAME=workflows-service
+    command: npm run start:dev -- workflows-service
+    environment:
+      - POSTGRES_HOST=workflows-db
+      - POSTGRES_PORT=5432
+      - REDIS_PORT=6379
+      - POSTGRES_USER=postgres
+      - POSTGRES_PASSWORD=postgres
+      - POSTGRES_DB=workflows
+      - NATS_URL=nats://nats:4222
+    volumes:
+      - ./libs:/usr/src/app/lib
+      - ./package.json:/usr/src/app/package.json
+      - ./tsconfig.json:/usr/src/app/tsconfig.json
+      - ./apps/workflows-service:/usr/src/app/apps/workflows-service
+    depends_on:
+      - workflows-db
+      - nats
+
+  workflows-db:
+    image: postgres:14
+    environment:
+      - POSTGRES_USER=postgres
+      - POSTGRES_PASSWORD=postgres
+      - POSTGRES_DB=workflows
+    ports:
+      - "5432:5432"
+
+  virtual-facility:
+    build:
+      context: .
+      dockerfile: ./Dockerfile
+      args:
+        - APP_NAME=virtual-facility
+    command: npm run start:dev -- virtual-facility
+    ports:
+      - 3000:3000
+    environment:
+      - POSTGRES_HOST=virtual-facility-db
+      - POSTGRES_PORT=5432
+      - REDIS_PORT=6379
+      - POSTGRES_USER=postgres
+      - POSTGRES_PASSWORD=postgres
+      - POSTGRES_DB=virtual_facility
+      - NATS_URL=nats://nats:4222
+    volumes:
+      - ./libs:/usr/src/app/lib
+      - ./package.json:/usr/src/app/package.json
+      - ./tsconfig.json:/usr/src/app/tsconfig.json
+      - ./apps/virtual-facility:/usr/src/app/apps/virtual-facility
+    depends_on:
+      - virtual-facility-db
+      - nats
+
+  virtual-facility-db:
+    image: postgres
+    environment:
+      - POSTGRES_USER=postgres
+      - POSTGRES_PASSWORD=postgres
+      - POSTGRES_DB=virtual_facility
+    ports:
+      - "5433:5432"
+  nats:
+    image: nats:alpine
+    ports:
+      - "4222:4222"
+      - "6222:6222"
+  alarms-generator:
+    build:
+      context: .
+      dockerfile: ./Dockerfile
+      args:
+        - APP_NAME=alarms-generator
+    command: npm run start:dev -- alarms-generator
+    environment:
+      - NATS_URL=nats://nats:4222
+      - RABBIT_MQ_URL=rabbitMQ://rabbi
+    volumes:
+      - ./libs:/usr/src/app/lib
+      - ./package.json:/usr/src/app/package.json
+      - ./tsconfig.json:/usr/src/app/tsconfig.json
+      - ./apps/alarms-generator:/usr/src/app/apps/alarms-generator
+    depends_on:
+      - nats
+  alarms-service:
+    build:
+      context: .
+      dockerfile: ./Dockerfile
+      args:
+        - APP_NAME=alarms-service
+    command: npm run start:dev -- alarms-service
+    environment:
+      - NATS_URL=nats://nats:4222
+    volumes:
+      - ./libs:/usr/src/app/lib
+      - ./package.json:/usr/src/app/package.json
+      - ./tsconfig.json:/usr/src/app/tsconfig.json
+      - ./apps/alarms-service:/usr/src/app/apps/alarms-service
+    depends_on:
+      - nats
+  rabbitmq:
+    image: rabbitmq:3-management
+    ports:
+      - "5672:5672"
+      - "15672:15672"
