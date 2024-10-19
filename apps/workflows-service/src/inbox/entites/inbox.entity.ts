@@ -1,22 +1,22 @@
-import { Column, Entity, PrimaryGeneratedColumn } from "typeorm";
+import { Column, Entity, PrimaryGeneratedColumn } from 'typeorm';
 
 @Entity()
-export class Inbox{
-    @PrimaryGeneratedColumn()
-    id: number;
+export class Inbox {
+  @PrimaryGeneratedColumn()
+  id: number;
 
-    @Column({ unique: true })
-    messageId: string;
+  @Column({ unique: true })
+  messageId: string;
 
-    @Column()
-    pattern: string;
+  @Column()
+  pattern: string;
 
-    @Column({enum: ['pending', 'processed']})
-    status: 'pending' | 'processed';
+  @Column({ enum: ['pending', 'processed'] })
+  status: 'pending' | 'processed';
 
-    @Column()
-    payload: Record<string, any>;
+  @Column()
+  payload: Record<string, any>;
 
-    @Column()
-    createdAt: Date;
+  @Column()
+  createdAt: Date;
 }

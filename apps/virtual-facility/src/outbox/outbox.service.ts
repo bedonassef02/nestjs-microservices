@@ -10,15 +10,18 @@ export class OutboxService {
     private readonly outboxRepository: Repository<Outbox>,
   ) {}
 
-  async getUnprocessedMessages(options:{ target:string, take: number}):Promise<Outbox[]>{
+  async getUnprocessedMessages(options: {
+    target: string;
+    take: number;
+  }): Promise<Outbox[]> {
     return this.outboxRepository.find({
-      where:{
-        target: options.target
+      where: {
+        target: options.target,
       },
       take: options.take,
-      order:{
-        createdAt: 'ASC'
-      }
-    })
+      order: {
+        createdAt: 'ASC',
+      },
+    });
   }
 }

@@ -19,7 +19,7 @@ export class BuildingService {
     private readonly dataSources: DataSource,
   ) {}
 
-  async create(createBuildingDto: CreateBuildingDto) {    
+  async create(createBuildingDto: CreateBuildingDto) {
     const queryRunner = this.dataSources.createQueryRunner();
     await queryRunner.connect();
     await queryRunner.startTransaction();
@@ -27,26 +27,28 @@ export class BuildingService {
     const buildingsRepository = queryRunner.manager.getRepository(Building);
     const outboxRepository = queryRunner.manager.getRepository(Outbox);
 
-    try{
-    const building = this.buildingsRepository.create({...createBuildingDto});
-    const newBuildingEntity = await this.buildingsRepository.save(building);
+    try {
+      const building = this.buildingsRepository.create({
+        ...createBuildingDto,
+      });
+      const newBuildingEntity = await this.buildingsRepository.save(building);
 
-    await outboxRepository.save({
-      type:'workflows.create',
-      payload: {
-        name: 'My Workflow',
-        buildingId: building.id,
-      },
-      target: WORKFLOWS_SERVICE.description
-    })
+      await outboxRepository.save({
+        type: 'workflows.create',
+        payload: {
+          name: 'My Workflow',
+          buildingId: building.id,
+        },
+        target: WORKFLOWS_SERVICE.description,
+      });
 
-    await queryRunner.commitTransaction();
+      await queryRunner.commitTransaction();
 
-    return newBuildingEntity;
-    }catch(error){
+      return newBuildingEntity;
+    } catch (error) {
       await queryRunner.rollbackTransaction();
       throw error;
-    }finally{
+    } finally {
       await queryRunner.release();
     }
   }

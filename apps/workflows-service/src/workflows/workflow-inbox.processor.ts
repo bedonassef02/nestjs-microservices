@@ -13,10 +13,14 @@ export class WorkflowInboxProcessor {
     this.logger.debug('processing inbox messages...');
     await this.inboxService.processInboxMessages(
       async (messages, manager) => {
-        return Promise.all(messages.map((message) =>{
-            if(message.pattern === 'workflows.create') {
-              return this.createWorkflow(message, manager)
-        }))
+        return Promise.all(
+          messages.map((message) => {
+            if (message.pattern === 'workflows.create') {
+              return this.createWorkflow(message, manager);
+            }
+            return Promise.resolve();
+          }),
+        );
       },
       {
         take: 100,
@@ -24,18 +28,19 @@ export class WorkflowInboxProcessor {
     );
   }
 
-  async createWorkflow(message: Inbox, manager: EntityManager){
+  async createWorkflow(message: Inbox, manager: EntityManager) {
     const workflowsRepository = manager.getRepository(Workflow);
 
     const workflow = workflowsRepository.create({
-        ...message.payload
-    })
-
+      ...message.payload,
+    });
     const newWorkflowEntity = await workflowsRepository.save(workflow);
-    this.logger.debug(`created workflow with id ${newWorkflowEntity.id} for building ${message.payload.buildingId}`)
-    
+    this.logger.debug(
+      `created workflow for building ${message.payload.buildingId}`,
+    );
+
     await manager.update(Inbox, message.id, {
-      status: 'processed'
-    })
+      status: 'processed',
+    });
   }
 }

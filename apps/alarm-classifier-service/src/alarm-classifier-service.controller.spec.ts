@@ -11,7 +11,10 @@ describe('AlarmClassifierServiceController', () => {
       providers: [AlarmClassifierServiceService],
     }).compile();
 
-    alarmClassifierServiceController = app.get<AlarmClassifierServiceController>(AlarmClassifierServiceController);
+    alarmClassifierServiceController =
+      app.get<AlarmClassifierServiceController>(
+        AlarmClassifierServiceController,
+      );
   });
 
   describe('root', () => {
